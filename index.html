@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宝塔面板日志监控系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>宝塔面板访问日志实时监控</h1>
+            <div class="header-info">
+                <div class="header-stats">
+                    <span class="stat-item">总请求: <strong id="total-requests">0</strong></span>
+                    <span class="stat-item">独立IP: <strong id="unique-ips">0</strong></span>
+                    <span class="stat-item">错误: <strong id="error-requests">0</strong></span>
+                    <span class="stat-item">监控时长: <strong id="monitor-duration">00:00:00</strong></span>
+                </div>
+                <span id="current-time"></span>
+                <span id="connection-status" class="status-indicator">● 已连接</span>
+            </div>
+        </header>
+
+        <div class="fixed-header">
+            <div class="control-panel">
+            <div class="control-group">
+                <label for="site-select">选择站点：</label>
+                <select id="site-select">
+                    <option value="">请选择站点...</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="ua-filter">UA监控关键词：</label>
+                <input type="text" id="ua-filter" placeholder="输入关键词，多个用逗号分隔">
+            </div>
+
+            <div class="control-group">
+                <label for="path-filter">路径过滤：</label>
+                <input type="text" id="path-filter" placeholder="输入路径关键词过滤">
+            </div>
+
+            <div class="control-group">
+                <label for="status-filter">状态码过滤：</label>
+                <select id="status-filter">
+                    <option value="">全部</option>
+                    <option value="2">2xx 成功</option>
+                    <option value="3">3xx 重定向</option>
+                    <option value="4">4xx 客户端错误</option>
+                    <option value="5">5xx 服务器错误</option>
+                </select>
+            </div>
+
+            <div class="control-buttons">
+                <div class="control-group">
+                    <label>
+                        <input type="checkbox" id="filter-abnormal-requests">
+                        过滤异常请求
+                    </label>
+                </div>
+                <button id="toggle-monitor" class="btn btn-primary">开始监控</button>
+                <button id="clear-logs" class="btn btn-warning">清空日志</button>
+                <button id="export-logs" class="btn btn-info">导出日志</button>
+                <button id="site-manage-btn" class="btn btn-secondary">站点管理</button>
+                <button id="firewall-btn" class="btn btn-secondary" onclick="openFirewallModal()">防火墙管理</button>
+                <button id="settings-btn" class="btn btn-secondary">设置</button>
+            </div>
+            </div>
+        </div>
+
+        <!-- 隐藏的输入框，用于兼容性 -->
+        <input type="hidden" id="ip-filter">
+        <input type="hidden" id="ua-blacklist">
+        <input type="hidden" id="ip-blacklist">
+        <input type="hidden" id="refresh-interval" value="5">
+        <input type="hidden" id="max-rows" value="1000">
+
+        <div class="main-content">
+            <div class="log-container">
+            <div class="log-header">
+                <h2>访问日志</h2>
+                <div class="log-controls">
+                    <input type="text" id="search-logs" placeholder="搜索日志...">
+                    <label>
+                        <input type="checkbox" id="auto-scroll" checked>
+                        自动滚动
+                    </label>
+                </div>
+            </div>
+            <div id="log-table-container">
+                <table id="log-table">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>IP地址</th>
+                            <th>方法</th>
+                            <th>URL</th>
+                            <th>状态码</th>
+                            <th>大小</th>
+                            <th>User-Agent</th>
+                            <th>来源</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-tbody">
+                    </tbody>
+                </table>
+                <div id="no-logs" class="no-logs">暂无日志数据</div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <audio id="alert-sound" preload="auto">
+        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.wav" type="audio/wav">
+        <source src="data:audio/wav;base64,UklGRoIGAABXQVZFZm10IBAAAAABAAEAiBMAACJmAAACAABkYXRhXgYAAAAuABYAEQAjABgA/v8HAAkAFQBOAFEASQBMAGYAdAB5AHEAawBzAG4ATAAwACwAHgAQAPr/3v/c/+H/7//y//n/EAAXABIA/P/x/+//6//l/+L/5P/m/9z/1//a/+T/6f/r//H/9f/5//3/AAADAAQABAAHAAoADAAOABAAEgATABUAFgAYABoAGwAdAB4AIAAhACMAJAAmACgAKQArACwALgAwADEAMwA0ADYAOAAkAFEAaQBbAB0A5//0/+//0v+1/7b/zP/Y/9//8P8HAEAARQBBACIABQD//wIA/P/2//X/9//4//n/+v/7//3//v8AAAAAAQABAAEAAQABAAEAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" type="audio/wav">
+    </audio>
+
+    <!-- 设置对话框 -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>设置</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- 基础设置 -->
+                <div class="settings-section">
+                    <h3>基础设置</h3>
+                    <div class="modal-control-group">
+                        <label for="modal-refresh-interval">刷新间隔（秒）：</label>
+                        <input type="number" id="modal-refresh-interval" min="1" max="60" value="5">
+                        <span class="help-text">监控时自动刷新的时间间隔</span>
+                    </div>
+                    <div class="modal-control-group">
+                        <label for="modal-max-rows">最大显示行数：</label>
+                        <input type="number" id="modal-max-rows" min="100" max="10000" value="1000">
+                        <span class="help-text">超出部分将被自动移除</span>
+                    </div>
+                    <div class="modal-control-group">
+                        <label for="modal-ip-filter">IP地址过滤：</label>
+                        <input type="text" id="modal-ip-filter" placeholder="输入IP地址过滤">
+                        <span class="help-text">只显示匹配的IP地址</span>
+                    </div>
+                </div>
+                
+                <!-- UA黑名单 -->
+                <div class="settings-section">
+                    <h3>UA黑名单</h3>
+                    <div class="modal-control-group">
+                        <div class="blacklist-input-group">
+                            <input type="text" id="ua-blacklist-input" placeholder="输入UA关键词">
+                            <button id="add-ua-blacklist" class="btn btn-primary btn-small">添加</button>
+                        </div>
+                        <div id="ua-blacklist-tags" class="blacklist-tags"></div>
+                        <span class="help-text">匹配的日志将被隐藏，不区分大小写</span>
+                    </div>
+                </div>
+                
+                <!-- IP黑名单 -->
+                <div class="settings-section">
+                    <h3>IP黑名单</h3>
+                    <div class="modal-control-group">
+                        <div class="blacklist-input-group">
+                            <input type="text" id="ip-blacklist-input" placeholder="输入IP地址">
+                            <button id="add-ip-blacklist" class="btn btn-primary btn-small">添加</button>
+                        </div>
+                        <div id="ip-blacklist-tags" class="blacklist-tags"></div>
+                        <span class="help-text">支持完整IP或IP段前缀匹配</span>
+                    </div>
+                </div>
+                
+                <!-- API配置管理 -->
+                <div class="settings-section">
+                    <h3>API配置管理</h3>
+                    <div class="modal-control-group">
+                        <button id="clear-api-config" class="btn btn-danger">清空API配置</button>
+                        <span class="help-text">清空后需要重新配置API连接信息</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings" class="btn btn-primary">保存</button>
+                <button id="cancel-settings" class="btn btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 站点管理对话框 -->
+    <div id="site-manage-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>站点管理</h2>
+                <span class="close close-site-manage">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="site-select-section">
+                    <label>当前站点：</label>
+                    <span id="current-site-name" style="font-weight: bold; margin-right: 15px;">未选择</span>
+                    <div class="tab-buttons">
+                        <button id="redirect-tab" class="tab-btn active">重定向管理</button>
+                        <button id="file-tab" class="tab-btn">文件管理</button>
+                    </div>
+                </div>
+                
+                <!-- 重定向管理内容 -->
+                <div id="redirect-content" class="tab-content active">
+                    <button id="refresh-redirects" class="btn btn-primary btn-small">刷新</button>
+                    <div id="redirect-list" class="redirect-list">
+                        <div class="no-redirects">请先在主页选择站点</div>
+                    </div>
+                </div>
+                
+                <!-- 文件管理内容 -->
+                <div id="file-content" class="tab-content" style="display: none;">
+                    <div class="file-manager-toolbar">
+                        <button id="refresh-files" class="btn btn-primary btn-small">刷新</button>
+                        <button id="upload-file" class="btn btn-success btn-small">上传文件</button>
+                        <button id="create-file" class="btn btn-info btn-small">新建文件</button>
+                        <button id="create-folder" class="btn btn-info btn-small">新建文件夹</button>
+                        <span class="file-path">
+                            <label>当前路径：</label>
+                            <span id="current-path">/</span>
+                        </span>
+                    </div>
+                    
+                    <div id="file-list" class="file-list">
+                        <div class="no-files">请先在主页选择站点</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close-site-manage" class="btn btn-secondary">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 文件上传对话框 -->
+    <div id="file-upload-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>上传文件</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area">
+                    <input type="file" id="file-input" multiple>
+                    <p>选择文件或拖拽文件到此处</p>
+                </div>
+                <div id="upload-progress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p class="upload-status">正在上传...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="start-upload" class="btn btn-primary">上传</button>
+                <button id="cancel-upload" class="btn btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 文件编辑对话框 -->
+    <div id="file-edit-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>编辑文件: <span id="edit-file-name"></span></h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <textarea id="file-content-editor" style="width: 100%; height: 400px; font-family: monospace;"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button id="save-file-content" class="btn btn-primary">保存</button>
+                <button id="cancel-file-edit" class="btn btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 防火墙管理对话框 -->
+    <div id="firewall-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>防火墙规则管理</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="firewall-toolbar">
+                    <button id="refresh-firewall-rules" class="btn btn-primary btn-small">刷新规则</button>
+                    <button id="add-firewall-rule" class="btn btn-success btn-small">添加规则</button>
+                    <div class="firewall-stats">
+                        <span>总规则数: <span id="firewall-rule-count">0</span></span>
+                    </div>
+                </div>
+                
+                <div class="firewall-rules-container">
+                    <table class="firewall-table">
+                        <thead>
+                            <tr>
+                                <th>IP地址</th>
+                                <th>策略</th>
+                                <th>链</th>
+                                <th>备注</th>
+                                <th>添加时间</th>
+                                <th>地区</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="firewall-rules-tbody">
+                            <tr>
+                                <td colspan="7" class="no-data">正在加载防火墙规则...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close-firewall-modal" class="btn btn-secondary">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加防火墙规则对话框 -->
+    <div id="add-rule-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>添加防火墙规则</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="rule-ip">IP地址:</label>
+                    <input type="text" id="rule-ip" class="form-control" placeholder="例如: 192.168.1.1">
+                </div>
+                <div class="form-group">
+                    <label for="rule-brief">备注:</label>
+                    <input type="text" id="rule-brief" class="form-control" placeholder="可选，说明添加原因">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirm-add-rule" class="btn btn-primary">添加</button>
+                <button id="cancel-add-rule" class="btn btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

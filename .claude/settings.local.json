@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go mod init:*)",
+      "Bash(go get:*)",
+      "Bash(go mod:*)",
+      "Bash(ls:*)",
+      "Bash(go build:*)",
+      "Bash(./btauto-log-viewer:*)",
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(chmod:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm install)",
+      "Bash(npm start)",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "Bash(node:*)",
+      "Bash(./start-electron.sh:*)",
+      "Bash(./start.sh:*)",
+      "Bash(touch:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(cp:*)"
+    ],
+    "deny": []
+  }
+}
