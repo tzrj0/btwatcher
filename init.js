@@ -95,4 +95,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // 输入框获得焦点时隐藏错误信息
     apiUrlInput.addEventListener('focus', () => hideError(urlError));
     apiKeyInput.addEventListener('focus', () => hideError(keyError));
+    
+    // 处理外部链接点击
+    document.addEventListener('click', function(e) {
+        // 检查是否是链接
+        const link = e.target.closest('a[href]');
+        if (link && link.href.startsWith('http')) {
+            e.preventDefault();
+            window.electron.openExternal(link.href);
+        }
+    });
 });

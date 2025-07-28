@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('electron', {
     loadConfig: () => ipcRenderer.invoke('load-config'),
     saveConfig: (config) => ipcRenderer.invoke('save-config', config),
     clearApiConfig: () => ipcRenderer.invoke('clear-api-config'),
+    openExternal: (url) => ipcRenderer.invoke('open-external', url),
     api: {
         getSiteList: () => ipcRenderer.invoke('api-request', { endpoint: 'getSiteList' }),
         getSiteLogs: (siteName) => ipcRenderer.invoke('api-request', { 
