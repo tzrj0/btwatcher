@@ -79,12 +79,21 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: List build artifacts
+    - name: List build artifacts (macOS/Linux)
+      if: runner.os != 'Windows'
       run: |
         echo "Contents of dist directory:"
         ls -la dist/ || echo "dist directory not found"
-        echo "All files:"
-        find . -name "*.dmg" -o -name "*.exe" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.zip" | head -20
+        echo "All DMG/ZIP files:"
+        find . -name "*.dmg" -o -name "*.zip" | head -20
+    
+    - name: List build artifacts (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        echo "Contents of dist directory:"
+        if (Test-Path dist) { Get-ChildItem dist } else { echo "dist directory not found" }
+        echo "All EXE files:"
+        Get-ChildItem -Path . -Filter *.exe -Recurse | Select-Object -First 20
 
     - name: Upload to Release
       uses: softprops/action-gh-release@v2
