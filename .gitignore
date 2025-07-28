@@ -70,5 +70,9 @@ coverage/
 # Documentation build
 docs/_build/
 
+# Release scripts (optional - remove these lines if you want to track them)
+release.sh
+release.ps1
+
 # Claude Code
 .claude/
