@@ -1,4 +1,4 @@
-# BT Auto - 宝塔面板日志监控系统
+# BT Watcher - 宝塔面板日志监控系统
 
 一个基于 Electron 的宝塔面板实时日志监控应用，提供网站访问日志的实时监控、分析和管理功能。
 
@@ -20,86 +20,86 @@
 - 🎨 现代化UI界面
 - 🔐 API密钥加密存储
 
-## 安装和使用
+## 快速开始
+
+### 1. 下载安装
+
+访问 [Releases](https://github.com/tzrj0/btwatcher/releases) 页面下载适合您系统的版本：
+
+- Windows: `BT-Watcher-Setup-*.exe`
+- macOS: `BT-Watcher-*.dmg`
+- Linux: `BT-Watcher-*.AppImage`
+
+### 2. 配置宝塔面板
+
+1. 登录宝塔面板
+2. 进入「面板设置」→「API接口」
+3. 开启 API 接口
+4. 点击「创建接口密钥」
+5. **重要**：将 IP 白名单设置为 `0.0.0.0/0`（允许所有 IP 访问）
+
+### 3. 初始化 BT Watcher
+
+1. 启动 BT Watcher
+2. 输入您的宝塔面板信息：
+   - **API 地址**：如 `http://192.168.1.100:8888`
+   - **API 密钥**：在宝塔面板获取的密钥
+3. 点击「保存并连接」
+
+## 使用文档
+
+- [快速开始指南](https://github.com/tzrj0/btwatcher/wiki/Quick-Start) - 详细的安装和配置步骤
+- [使用教程](https://github.com/tzrj0/btwatcher/wiki/User-Guide) - 完整的功能使用说明
+- [常见问题](https://github.com/tzrj0/btwatcher/wiki/FAQ) - 常见问题解答
+- [功能说明](https://github.com/tzrj0/btwatcher/wiki/Features) - 所有功能的详细介绍
+- [故障排查](https://github.com/tzrj0/btwatcher/wiki/Troubleshooting) - 问题诊断和解决方案
+
+## 开发指南
 
 ### 环境要求
-- Node.js 14.0 或更高版本
+- Node.js 18.0 或更高版本
 - npm 或 yarn
 - macOS / Windows / Linux
-- 宝塔面板 API 访问权限
 
-### 快速开始
+### 本地开发
 
-1. 克隆项目
 ```bash
-git clone https://github.com/yourusername/btauto.git
-cd btauto
-```
+# 克隆项目
+git clone https://github.com/tzrj0/btwatcher.git
+cd btwatcher
 
-2. 安装依赖
-```bash
+# 安装依赖
 npm install
-```
 
-3. 启动应用
-```bash
+# 启动开发模式
 npm start
-# 或使用启动脚本
-./start.sh
 ```
-
-### 首次配置
-
-首次启动应用时，会显示初始化界面：
-
-1. 输入宝塔面板的访问地址（如：http://192.168.1.100:8888）
-2. 输入API密钥（在宝塔面板-设置-API接口中获取）
-3. 点击"保存并连接"
-
-配置信息会加密保存在本地，下次启动自动连接。
 
 ### 构建应用
 
-构建 macOS 应用：
 ```bash
+# 构建所有平台
 npm run build
-# 或
-./build-mac.sh
-```
 
-构建 Windows 应用：
-```bash
+# 构建特定平台
+npm run build -- --mac
 npm run build -- --win
+npm run build -- --linux
 ```
 
-## 使用说明
+## 自动构建
 
-### 主界面功能
+本项目已配置 GitHub Actions 自动构建：
 
-- **站点选择** - 下拉选择要监控的网站
-- **开始/停止监控** - 控制日志监控状态
-- **刷新间隔** - 设置自动刷新时间（1-60秒）
-- **过滤器** - IP过滤、路径过滤、状态码过滤
-- **搜索** - 全文搜索日志内容
+- **每次推送到 main 分支**：自动创建预发布版本
+- **创建版本标签**：自动构建正式发布版本
 
-### 防火墙管理
-
-1. 点击"防火墙管理"按钮
-2. 查看当前防火墙规则列表
-3. 添加新规则或删除现有规则
-4. 支持批量操作
-
-### 设置选项
-
-- **基础设置** - 刷新间隔、最大显示行数、IP过滤
-- **UA黑名单** - 添加需要过滤的User-Agent关键词
-- **IP黑名单** - 添加需要过滤的IP地址或IP段
-- **API配置管理** - 清空API配置，重新初始化
+构建状态：[![Build Status](https://github.com/tzrj0/btwatcher/actions/workflows/auto-release.yml/badge.svg)](https://github.com/tzrj0/btwatcher/actions)
 
 ## 项目结构
 
 ```
-btauto/
+btwatcher/
 ├── main.js           # Electron主进程
 ├── renderer.js       # 渲染进程主逻辑
 ├── preload.js        # 预加载脚本
@@ -108,54 +108,47 @@ btauto/
 ├── style.css         # 样式文件
 ├── lib/
 │   └── bt-api.js     # 宝塔API封装
+├── .github/
+│   └── workflows/    # GitHub Actions配置
 ├── build/            # 构建配置
-├── dist/             # 构建输出
 └── package.json      # 项目配置
 ```
 
-## API安全
+## 安全说明
 
 - API密钥使用 AES-256-CBC 加密存储
-- 支持API接口IP白名单（建议在宝塔面板中设置）
-- 所有API请求使用签名验证
+- 建议定期更换 API 密钥
+- 不要分享您的 API 密钥给他人
+- 所有 API 请求使用签名验证
 
-## 注意事项
+## 贡献指南
 
-1. 请确保宝塔面板API接口已开启
-2. 建议设置API接口IP白名单
-3. 大量日志时可能影响性能，建议合理设置最大显示行数
-4. 防火墙规则修改需要谨慎操作
+欢迎贡献代码和反馈问题！
 
-## 开发说明
+1. Fork 本仓库
+2. 创建您的特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 创建 Pull Request
 
-### 开发环境运行
-```bash
-npm run dev
-```
+## 问题反馈
 
-### 代码规范
-- 使用 ESLint 进行代码检查
-- 遵循 JavaScript Standard Style
+如果您在使用过程中遇到问题：
 
-### 调试
-在 main.js 中取消注释以下代码开启开发者工具：
-```javascript
-// mainWindow.webContents.openDevTools();
-```
+1. 查看 [常见问题](https://github.com/tzrj0/btwatcher/wiki/FAQ)
+2. 查看 [故障排查指南](https://github.com/tzrj0/btwatcher/wiki/Troubleshooting)
+3. 在 [Issues](https://github.com/tzrj0/btwatcher/issues) 提交问题
 
 ## 许可证
 
-MIT License
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
 
-## 贡献
+## 致谢
 
-欢迎提交 Issue 和 Pull Request！
+- [宝塔面板](https://www.bt.cn/) - 提供强大的服务器管理功能
+- [Electron](https://www.electronjs.org/) - 跨平台桌面应用框架
+- 所有贡献者和用户的支持
 
-## 更新日志
+---
 
-### v1.0.0 (2024-01-24)
-- 初始版本发布
-- 实现基础日志监控功能
-- 添加防火墙管理
-- 支持多站点切换
-- API配置加密存储
+Made with ❤️ by [tzrj0](https://github.com/tzrj0)
