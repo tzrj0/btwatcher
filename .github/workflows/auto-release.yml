@@ -6,7 +6,6 @@ on:
     paths-ignore:
       - '**.md'
       - '.gitignore'
-      - '.github/workflows/*'
 
 permissions:
   contents: write
