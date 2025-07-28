@@ -19,6 +19,7 @@
   "build": {
     "appId": "com.btwatcher.app",
     "productName": "BT Watcher",
+    "artifactName": "BT-Watcher-${version}-${os}.${ext}",
     "directories": {
       "output": "dist"
     },
@@ -28,9 +29,11 @@
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist"
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "target": ["dmg", "zip"]
     },
     "dmg": {
+      "artifactName": "BT-Watcher-${version}.${ext}",
       "contents": [
         {
           "x": 130,
@@ -45,10 +48,17 @@
       ]
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "artifactName": "BT-Watcher-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     },
     "linux": {
-      "target": "AppImage"
+      "target": ["AppImage", "deb"],
+      "category": "Development",
+      "artifactName": "BT-Watcher-${version}.${ext}"
     }
   },
   "author": "",
