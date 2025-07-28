@@ -47,7 +47,7 @@ jobs:
     needs: create-release
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [macos-latest, windows-latest]
         include:
           - os: macos-latest
             name: macOS
@@ -55,9 +55,6 @@ jobs:
           - os: windows-latest
             name: Windows
             build_cmd: npm run build -- --win
-          - os: ubuntu-latest
-            name: Linux
-            build_cmd: npm run build -- --linux
 
     runs-on: ${{ matrix.os }}
     name: Build for ${{ matrix.name }}
@@ -82,6 +79,13 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: List build artifacts
+      run: |
+        echo "Contents of dist directory:"
+        ls -la dist/ || echo "dist directory not found"
+        echo "All files:"
+        find . -name "*.dmg" -o -name "*.exe" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.zip" | head -20
+
     - name: Upload to Release
       uses: softprops/action-gh-release@v2
       with:
@@ -93,16 +97,12 @@ jobs:
           ## 下载
           - **macOS**: BT-Watcher-*.dmg
           - **Windows**: BT-Watcher-Setup-*.exe
-          - **Linux**: BT-Watcher-*.AppImage
           
           > 这是一个自动构建的开发版本
         prerelease: true
         files: |
           dist/*.dmg
           dist/*.exe
-          dist/*.AppImage
-          dist/*.deb
-          dist/*.rpm
           dist/*.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

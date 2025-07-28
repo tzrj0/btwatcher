@@ -25,11 +25,8 @@
     },
     "mac": {
       "category": "public.app-category.developer-tools",
-      "icon": "icon.icns",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
       "target": ["dmg", "zip"]
     },
     "dmg": {
@@ -55,11 +52,6 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     },
-    "linux": {
-      "target": ["AppImage", "deb"],
-      "category": "Development",
-      "artifactName": "BT-Watcher-${version}.${ext}"
-    }
   },
   "author": "",
   "license": "MIT"

@@ -16,7 +16,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [macos-latest, windows-latest]
         include:
           - os: macos-latest
             name: macOS
@@ -24,9 +24,6 @@ jobs:
           - os: windows-latest
             name: Windows
             build_cmd: npm run build -- --win
-          - os: ubuntu-latest
-            name: Linux
-            build_cmd: npm run build -- --linux
 
     runs-on: ${{ matrix.os }}
     name: Build for ${{ matrix.name }}
@@ -56,9 +53,6 @@ jobs:
         path: |
           dist/*.dmg
           dist/*.exe
-          dist/*.AppImage
-          dist/*.deb
-          dist/*.rpm
           dist/*.zip
         if-no-files-found: error
 
