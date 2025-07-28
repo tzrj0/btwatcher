@@ -51,7 +51,7 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
-    },
+    }
   },
   "author": "",
   "license": "MIT"
