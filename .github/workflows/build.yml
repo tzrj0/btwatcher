@@ -1,0 +1,105 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        include:
+          - os: macos-latest
+            name: macOS
+            build_cmd: npm run build -- --mac
+          - os: windows-latest
+            name: Windows
+            build_cmd: npm run build -- --win
+          - os: ubuntu-latest
+            name: Linux
+            build_cmd: npm run build -- --linux
+
+    runs-on: ${{ matrix.os }}
+    name: Build for ${{ matrix.name }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: ${{ matrix.build_cmd }}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.name }}-build
+        path: |
+          dist/*.dmg
+          dist/*.exe
+          dist/*.AppImage
+          dist/*.deb
+          dist/*.rpm
+          dist/*.zip
+        if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: ./artifacts
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      id: create_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: BT Watcher ${{ github.ref_name }}
+        body: |
+          BT Watcher ${{ github.ref_name }} Release
+          
+          ## 下载
+          - **macOS**: BT-Watcher-*.dmg
+          - **Windows**: BT-Watcher-*.exe
+          - **Linux**: BT-Watcher-*.AppImage
+          
+          ## 更新日志
+          请查看 [CHANGELOG.md](https://github.com/tzrj0/btwatcher/blob/main/CHANGELOG.md)
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Assets
+      run: |
+        for file in ./artifacts/*/*.{dmg,exe,AppImage,deb,rpm,zip}; do
+          if [ -f "$file" ]; then
+            echo "Uploading $file"
+            gh release upload "${{ github.ref_name }}" "$file" --clobber
+          fi
+        done
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

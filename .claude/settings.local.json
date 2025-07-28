@@ -21,7 +21,9 @@
       "Bash(touch:*)",
       "Bash(find:*)",
       "Bash(grep:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

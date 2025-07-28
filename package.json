@@ -1,5 +1,5 @@
 {
-  "name": "bt-log-monitor",
+  "name": "bt-watcher",
   "version": "1.0.0",
   "description": "宝塔面板站点访问日志实时监控客户端",
   "main": "main.js",
@@ -17,8 +17,8 @@
     "electron-builder": "^24.6.4"
   },
   "build": {
-    "appId": "com.btauto.logmonitor",
-    "productName": "宝塔日志监控",
+    "appId": "com.btwatcher.app",
+    "productName": "BT Watcher",
     "directories": {
       "output": "dist"
     },

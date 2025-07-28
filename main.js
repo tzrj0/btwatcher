@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const configPath = path.join(app.getPath('userData'), 'config.json');
 
 // 加密配置
-const ENCRYPTION_KEY = crypto.scryptSync('btauto-secret-2024', 'salt', 32);
+const ENCRYPTION_KEY = crypto.scryptSync('bt-watcher-secret-2024', 'salt', 32);
 const IV_LENGTH = 16;
 
 // 加密函数
@@ -191,7 +191,7 @@ function createWindow() {
       nodeIntegration: false
     },
     icon: path.join(__dirname, 'icon.png'),
-    title: '宝塔面板日志监控系统'
+    title: 'BT Watcher'
   });
 
   // 检查是否需要初始化

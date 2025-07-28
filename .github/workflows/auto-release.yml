@@ -1,0 +1,101 @@
+name: Auto Release on Push
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - '.github/workflows/*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.create_tag.outputs.tag }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Get version from package.json
+      id: package_version
+      run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+    - name: Generate build number
+      id: build_number
+      run: echo "build=$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
+
+    - name: Create tag
+      id: create_tag
+      run: |
+        TAG="v${{ steps.package_version.outputs.version }}-build.${{ steps.build_number.outputs.build }}"
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+        git tag $TAG
+        git push origin $TAG
+
+  build-and-release:
+    needs: create-release
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        include:
+          - os: macos-latest
+            name: macOS
+            build_cmd: npm run build -- --mac
+          - os: windows-latest
+            name: Windows
+            build_cmd: npm run build -- --win
+          - os: ubuntu-latest
+            name: Linux
+            build_cmd: npm run build -- --linux
+
+    runs-on: ${{ matrix.os }}
+    name: Build for ${{ matrix.name }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ needs.create-release.outputs.release_tag }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: ${{ matrix.build_cmd }}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.create-release.outputs.release_tag }}
+        name: BT Watcher ${{ needs.create-release.outputs.release_tag }}
+        body: |
+          自动构建版本 ${{ needs.create-release.outputs.release_tag }}
+          
+          ## 下载
+          - **macOS**: BT-Watcher-*.dmg
+          - **Windows**: BT-Watcher-Setup-*.exe
+          - **Linux**: BT-Watcher-*.AppImage
+          
+          > 这是一个自动构建的开发版本
+        prerelease: true
+        files: |
+          dist/*.dmg
+          dist/*.exe
+          dist/*.AppImage
+          dist/*.deb
+          dist/*.rpm
+          dist/*.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
