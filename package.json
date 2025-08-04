@@ -1,6 +1,6 @@
 {
   "name": "bt-watcher",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "宝塔面板站点访问日志实时监控客户端",
   "main": "main.js",
   "scripts": {
